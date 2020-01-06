@@ -1669,6 +1669,15 @@ set sql(9) "CREATE TABLE ORDER_LINE (OL_DELIVERY_D TIMESTAMP WITH TIME ZONE, OL_
 set sql(9) "CREATE TABLE ORDER_LINE (OL_DELIVERY_D TIMESTAMP WITH TIME ZONE, OL_O_ID INTEGER NOT NULL, OL_W_ID INTEGER NOT NULL, OL_I_ID INTEGER NOT NULL, OL_SUPPLY_W_ID INTEGER NOT NULL, OL_D_ID SMALLINT NOT NULL, OL_NUMBER SMALLINT NOT NULL, OL_QUANTITY SMALLINT NOT NULL, OL_AMOUNT NUMERIC(6,2), OL_DIST_INFO CHARACTER(24), CONSTRAINT ORDER_LINE_I1 PRIMARY KEY (OL_W_ID, OL_D_ID, OL_O_ID, OL_NUMBER)) PARTITION BY HASH (OL_W_ID)"
 		}
 	}
+set sql(10) "SELECT create_distributed_table('customer', 'c_w_id')"
+set sql(11) "SELECT create_distributed_table('district', 'd_w_id')"
+set sql(12) "SELECT create_distributed_table('history', 'h_w_id')"
+set sql(13) "SELECT create_distributed_table('warehouse', 'w_id')"
+set sql(14) "SELECT create_distributed_table('stock', 's_w_id')"
+set sql(15) "SELECT create_distributed_table('new_order', 'no_w_id')"
+set sql(16) "SELECT create_distributed_table('orders', 'o_w_id')"
+set sql(17) "SELECT create_distributed_table('order_line', 'ol_w_id')"
+set sql(18) "SELECT create_reference_table('item')"
 for { set i 1 } { $i <= 9 } { incr i } {
 set result [ pg_exec $lda $sql($i) ]
 if {[pg_result $result -status] != "PGRES_COMMAND_OK"} {
@@ -1688,6 +1697,14 @@ pg_result $result -clear
          }
       }
    }
+for { set i 10 } { $i <= 18 } { incr i } {
+set result [ pg_exec $lda $sql($i) ]
+if {[pg_result $result -status] != "PGRES_COMMAND_OK"} {
+#error "[pg_result $result -error]"
+	} else {
+pg_result $result -clear
+	}
+    }	
 }
 
 proc CreateIndexes { lda } {
@@ -2099,7 +2116,7 @@ set lda [ ConnectToPostgres $host $port $superuser $superuser_password $defaultd
 if { $lda eq "Failed" } {
 error "error, the database connection to $host could not be established"
  } else {
-CreateUserDatabase $lda $host $port $db $tspace $superuser $superuser_password $user $password
+#CreateUserDatabase $lda $db $superuser $user $password
 set result [ pg_exec $lda "commit" ]
 pg_result $result -clear
 pg_disconnect $lda
